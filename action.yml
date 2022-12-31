@@ -1,0 +1,10 @@
+name: 'Build issue dependencies graph'
+author: 'Maksim Lobanov'
+description: 'Update epic issue with mermaid diagram that contains dependencies between all issues included to epic'
+inputs:
+  root-issue-url:
+    description: 'Url of root issue'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

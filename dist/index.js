@@ -18,9 +18,44 @@ const parseInputs = () => {
     return {
         rootIssue,
         accessToken: "",
+        sectionTitle: "Spec graph",
     };
 };
 exports.parseInputs = parseInputs;
+
+
+/***/ }),
+
+/***/ 1886:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitHubApiClient = void 0;
+const github_1 = __nccwpck_require__(5438);
+class GitHubApiClient {
+    constructor(accessToken) {
+        this.client = (0, github_1.getOctokit)(accessToken);
+    }
+    async getIssue(issueRef) {
+        const response = await this.client.rest.issues.get({
+            owner: issueRef.repoOwner,
+            repo: issueRef.repoName,
+            issue_number: issueRef.issueNumber,
+        });
+        return response.data;
+    }
+    async updateIssueContent(issueRef, body) {
+        await this.client.rest.issues.update({
+            owner: issueRef.repoOwner,
+            repo: issueRef.repoName,
+            issue_number: issueRef.issueNumber,
+            body: body,
+        });
+    }
+}
+exports.GitHubApiClient = GitHubApiClient;
 
 
 /***/ }),
@@ -32,7 +67,7 @@ exports.parseInputs = parseInputs;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GraphBuilder = void 0;
-const mermaid_node_1 = __nccwpck_require__(7537);
+const mermaid_node_1 = __nccwpck_require__(235);
 class GraphBuilder {
     constructor() {
         this.nodes = new Map();
@@ -92,28 +127,8 @@ exports.GraphBuilder = GraphBuilder;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IssueContentParser = void 0;
-const github_1 = __nccwpck_require__(5438);
 const utils_1 = __nccwpck_require__(918);
 class IssueContentParser {
-    constructor(accessToken) {
-        this.client = (0, github_1.getOctokit)(accessToken);
-    }
-    async getIssue(issueRef) {
-        const response = await this.client.rest.issues.get({
-            owner: issueRef.repoOwner,
-            repo: issueRef.repoName,
-            issue_number: issueRef.issueNumber,
-        });
-        return response.data;
-    }
-    async updateIssueContent(issueRef, body) {
-        await this.client.rest.issues.update({
-            owner: issueRef.repoOwner,
-            repo: issueRef.repoName,
-            issue_number: issueRef.issueNumber,
-            body: body,
-        });
-    }
     extractIssueTasklist(issue) {
         var _a;
         const issueContent = (_a = issue.body) !== null && _a !== void 0 ? _a : "";
@@ -195,20 +210,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const config_1 = __nccwpck_require__(88);
+const github_api_client_1 = __nccwpck_require__(1886);
 const graph_builder_1 = __nccwpck_require__(3289);
 const issue_content_parser_1 = __nccwpck_require__(8352);
-const mermaid_node_1 = __nccwpck_require__(7537);
+const mermaid_node_1 = __nccwpck_require__(235);
 const mermaid_render_1 = __nccwpck_require__(6288);
 const run = async () => {
     try {
         const config = (0, config_1.parseInputs)();
-        const issueContentParser = new issue_content_parser_1.IssueContentParser(config.accessToken);
+        const githubApiClient = new github_api_client_1.GitHubApiClient(config.accessToken);
+        const issueContentParser = new issue_content_parser_1.IssueContentParser();
         const mermaidRender = new mermaid_render_1.MermaidRender();
-        const rootIssue = await issueContentParser.getIssue(config.rootIssue);
+        const rootIssue = await githubApiClient.getIssue(config.rootIssue);
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
         const graphBuilder = new graph_builder_1.GraphBuilder();
         for (const issueRef of rootIssueTasklist) {
-            const issue = await issueContentParser.getIssue(issueRef);
+            const issue = await githubApiClient.getIssue(issueRef);
             const issueDetails = mermaid_node_1.MermaidNode.fromGitHubIssue(issue);
             graphBuilder.addIssue(issueRef, issueDetails);
             const issueDependencies = issueContentParser.extractIssueDependencies(issue);
@@ -217,10 +234,13 @@ const run = async () => {
         const graph = graphBuilder.getGraph();
         const renderedContent = mermaidRender.render(graph);
         console.log(renderedContent);
+        const updatedIssueContent = issueContentParser.replaceIssueContent(rootIssue, config.sectionTitle, renderedContent);
+        await githubApiClient.updateIssueContent(config.rootIssue, updatedIssueContent);
     }
     catch (error) {
         if (error instanceof Error) {
             core.setFailed(error.message);
+            throw error;
         }
     }
 };
@@ -229,7 +249,7 @@ run();
 
 /***/ }),
 
-/***/ 7537:
+/***/ 235:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -256,10 +276,10 @@ class MermaidNode {
         return "notstarted";
     }
     static getStartNode() {
-        return new MermaidNode('start', 'Start', "notstarted");
+        return new MermaidNode("start", "Start", "notstarted");
     }
     static getFinishNode() {
-        return new MermaidNode('finish', 'Finish', "notstarted");
+        return new MermaidNode("finish", "Finish", "notstarted");
     }
 }
 exports.MermaidNode = MermaidNode;
@@ -8074,7 +8094,7 @@ conversions["RegExp"] = function (V, opts) {
 
 /***/ }),
 
-/***/ 1654:
+/***/ 7537:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8290,7 +8310,7 @@ exports.implementation = class URLImpl {
 
 const conversions = __nccwpck_require__(4886);
 const utils = __nccwpck_require__(3185);
-const Impl = __nccwpck_require__(1654);
+const Impl = __nccwpck_require__(7537);
 
 const impl = utils.implSymbol;
 

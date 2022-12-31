@@ -3,6 +3,7 @@ import { parseIssueUrl } from "./utils";
 
 export interface Config {
     rootIssue: GitHubIssueReference;
+    sectionTitle: string;
     accessToken: string;
 }
 
@@ -16,5 +17,6 @@ export const parseInputs = (): Config => {
     return {
         rootIssue,
         accessToken: "",
+        sectionTitle: "Spec graph",
     };
 };

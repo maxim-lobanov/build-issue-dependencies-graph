@@ -15,7 +15,7 @@ export class MermaidNode {
             `issue${issue.id}`,
             issue.title,
             MermaidNode.getNodeStatusFromGitHubIssue(issue),
-            issue.html_url,
+            issue.html_url
         );
     }
 
@@ -32,10 +32,10 @@ export class MermaidNode {
     }
 
     public static getStartNode(): MermaidNode {
-        return new MermaidNode('start', 'Start', "notstarted");
+        return new MermaidNode("start", "Start", "notstarted");
     }
 
     public static getFinishNode(): MermaidNode {
-        return new MermaidNode('finish', 'Finish', "notstarted"); 
+        return new MermaidNode("finish", "Finish", "notstarted");
     }
 }

@@ -55,8 +55,8 @@ export class GraphBuilder {
         const graphNodes = Array.from(this.nodes.values());
         const vertices = graphNodes.map(x => x.value).filter((x): x is MermaidNode => x !== null);
 
-        const startNode = MermaidNode.getStartNode();
-        const finishNode = MermaidNode.getFinishNode();
+        const startNode = MermaidNode.createStartNode();
+        const finishNode = MermaidNode.createFinishNode();
 
         const edgesFromStartNode: NullablePartial<GraphEdge>[] = graphNodes
             .filter(x => x.predecessors.length === 0)

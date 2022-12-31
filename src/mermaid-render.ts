@@ -11,7 +11,7 @@ ${this.renderLegendSection()}
 ${this.renderIssuesSection(graph.vertices)}
 ${this.renderDependencies(graph.edges)}
 \`\`\`
-        `;
+`;
     }
 
     private renderCssSection(): string {
@@ -23,7 +23,7 @@ classDef started fill:#fae17d,color:#000;
 classDef completed fill:#ccffd8,color:#000;
 
 %% </CSS>
-        `;
+`;
     }
 
     private renderLegendSection(): string {
@@ -39,7 +39,7 @@ subgraph legend["Legend"]
 end
 
 %% </Legend>
-        `;
+`;
     }
 
     private renderIssuesSection(issues: MermaidNode[]): string {
@@ -51,7 +51,7 @@ end
 ${renderedGraphIssues}
 
 %% </Issues>
-        `;
+`;
     }
 
     private renderIssue(issue: MermaidNode): string {
@@ -72,7 +72,7 @@ ${renderedGraphIssues}
 ${renderedDependencies}
 
 %% </Dependencies>
-        `;
+`;
     }
 
     private renderDependency(dependency: GraphEdge): string {

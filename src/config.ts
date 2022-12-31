@@ -5,6 +5,7 @@ export interface Config {
     rootIssue: GitHubIssueReference;
     sectionTitle: string;
     accessToken: string;
+    dryRun: boolean;
 }
 
 export const parseInputs = (): Config => {
@@ -18,5 +19,6 @@ export const parseInputs = (): Config => {
         rootIssue,
         accessToken: "",
         sectionTitle: "Spec graph",
+        dryRun: false
     };
 };

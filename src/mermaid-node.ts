@@ -10,7 +10,7 @@ export class MermaidNode {
         public readonly url?: string
     ) {}
 
-    public static fromGitHubIssue(issue: GitHubIssue): MermaidNode {
+    public static createFromGitHubIssue(issue: GitHubIssue): MermaidNode {
         return new MermaidNode(
             `issue${issue.id}`,
             issue.title,
@@ -31,11 +31,11 @@ export class MermaidNode {
         return "notstarted";
     }
 
-    public static getStartNode(): MermaidNode {
+    public static createStartNode(): MermaidNode {
         return new MermaidNode("start", "Start", "notstarted");
     }
 
-    public static getFinishNode(): MermaidNode {
+    public static createFinishNode(): MermaidNode {
         return new MermaidNode("finish", "Finish", "notstarted");
     }
 }

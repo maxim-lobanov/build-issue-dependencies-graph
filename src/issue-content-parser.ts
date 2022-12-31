@@ -1,12 +1,12 @@
 import { GitHubIssue, GitHubIssueReference } from "./models";
-import { parseIssueUrl } from "./utils";
+import { parseIssuesUrls, parseIssueUrl } from "./utils";
 
 export class IssueContentParser {
     public extractIssueTasklist(issue: GitHubIssue): GitHubIssueReference[] {
         const contentLines = issue.body?.split("\n") ?? [];
 
         return contentLines
-            .filter(x => x.startsWith("- [ ] "))
+            .filter(x => this.isTaskListLine(x))
             .map(x => parseIssueUrl(x))
             .filter((x): x is GitHubIssueReference => x !== null);
     }
@@ -15,34 +15,39 @@ export class IssueContentParser {
         const contentLines = issue.body?.split("\n") ?? [];
 
         return contentLines
-            .filter(x => x.startsWith("Depends on"))
-            .map(x => x.split(",").map(y => parseIssueUrl(y)))
+            .filter(x => this.isDependencyLine(x))
+            .map(x => parseIssuesUrls(x))
             .flat()
             .filter((x): x is GitHubIssueReference => x !== null);
     }
 
     public replaceIssueContent(issue: GitHubIssue, sectionTitle: string, newSectionContent: string): string {
-        const content = issue.body ?? "";
-        const contentLines = content.split("\n");
+        const contentLines = issue.body?.split("\n") ?? [];
 
-        const sectionStartIndex = contentLines.findIndex(line => this.isLineMarkdownHeader(line, sectionTitle));
+        const sectionStartIndex = contentLines.findIndex(x => this.isMarkdownHeaderLine(x, sectionTitle));
         if (sectionStartIndex === -1) {
-            throw "";
+            throw `Markdown header '${sectionTitle}' is not found in issue body:\n ${issue.body}`;
         }
 
         const sectionEndIndex = contentLines.findIndex(
-            (line, lineIndex) => lineIndex > sectionStartIndex && this.isLineMarkdownHeader(line)
+            (x, index) => index > sectionStartIndex && this.isMarkdownHeaderLine(x)
         );
 
         return [
-            ...contentLines.slice(0, sectionStartIndex),
+            ...contentLines.slice(0, sectionStartIndex + 1),
             newSectionContent,
-            ...contentLines.slice(sectionEndIndex),
+            "",
+            ...contentLines.slice(sectionEndIndex !== -1 ? sectionEndIndex : contentLines.length),
         ].join("\n");
     }
 
-    private isLineMarkdownHeader(line: string, sectionTitle?: string): boolean {
-        if (!line.startsWith("#")) {
+    public isMarkdownHeaderLine(str: string, sectionTitle?: string): boolean {
+        if (!str.startsWith("#")) {
+            return false;
+        }
+
+        const trimmedLine = str.replace(/^#+/, "").trim();
+        if (!trimmedLine) {
             return false;
         }
 
@@ -50,7 +55,16 @@ export class IssueContentParser {
             return true;
         }
 
-        const trimmedLine = line.replace(/^#+/, "").trim();
         return trimmedLine.toLowerCase() === sectionTitle.toLocaleLowerCase();
+    }
+
+    public isTaskListLine(str: string): boolean {
+        return str.startsWith("- [ ] ");
+    }
+
+    public isDependencyLine(str: string): boolean {
+        const dependencyLinePrefixes = ["Dependencies: ", "Predecessors: ", "Depends on ", "Depends on: "];
+        const formattedLine = str.toLowerCase();
+        return dependencyLinePrefixes.some(x => formattedLine.startsWith(x.toLowerCase()));
     }
 }

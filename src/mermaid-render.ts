@@ -2,12 +2,14 @@ import { Graph, GraphEdge } from "./graph-builder";
 import { MermaidNode } from "./mermaid-node";
 
 export class MermaidRender {
+    constructor(private readonly includeLegend: boolean) {}
+
     public render(graph: Graph): string {
         return `
+${this.renderLegendSection()}
 \`\`\`mermaid
 flowchart TD
 ${this.renderCssSection()}
-${this.renderLegendSection()}
 ${this.renderIssuesSection(graph.vertices)}
 ${this.renderDependencies(graph.edges)}
 \`\`\`
@@ -27,7 +29,15 @@ classDef completed fill:#ccffd8,color:#000;
     }
 
     private renderLegendSection(): string {
+        if (!this.includeLegend) {
+            return "";
+        }
+
         return `
+\`\`\`mermaid
+flowchart TD
+${this.renderCssSection()}
+
 %% <Legend>
 
 subgraph legend["Legend"]
@@ -39,6 +49,7 @@ subgraph legend["Legend"]
 end
 
 %% </Legend>
+\`\`\`
 `;
     }
 
@@ -55,7 +66,7 @@ ${renderedGraphIssues}
     }
 
     private renderIssue(issue: MermaidNode): string {
-        let result = `${issue.nodeId}("${issue.title}"):::${issue.status};`;
+        let result = `${issue.nodeId}("${issue.getWrappedTitle()}"):::${issue.status};`;
         if (issue.url) {
             result += `\nclick ${issue.nodeId} href "${issue.url}" _blank;`;
         }

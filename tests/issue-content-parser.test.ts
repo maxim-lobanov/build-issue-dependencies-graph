@@ -99,7 +99,7 @@ depending https://github.com/actions/setup-node/issues/3
 https://github.com/actions/setup-node/issues/4
 
 Test content 3
-`
+`,
             } as GitHubIssue;
             const actual = issueContentParser.extractIssueDependencies(issue);
             expect(actual).toEqual([]);
@@ -121,7 +121,7 @@ Hello
 Depends on https://github.com/actions/setup-node/issues/105, https://github.com/actions/setup-python/issues/115, https://github.com/actions/setup-go/issues/125
 
 Test content
-`
+`,
             } as GitHubIssue;
             const actual = issueContentParser.extractIssueDependencies(issue);
             expect(actual).toEqual([
@@ -141,7 +141,7 @@ Depends on https://github.com/actions/setup-go/issues/103 https://github.com/act
 Depends on https://github.com/actions/setup-ruby/issues/105 & https://github.com/actions/setup-ruby/issues/106
 
 Test content
-`
+`,
             } as GitHubIssue;
             const actual = issueContentParser.extractIssueDependencies(issue);
             expect(actual).toEqual([
@@ -165,7 +165,7 @@ Dependencies: https://github.com/actions/setup-node/issues/103
 Predecessors: https://github.com/actions/setup-node/issues/104
 
 Test content
-`
+`,
             } as GitHubIssue;
             const actual = issueContentParser.extractIssueDependencies(issue);
             expect(actual).toEqual([

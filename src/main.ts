@@ -11,7 +11,7 @@ const run = async (): Promise<void> => {
         const config = parseInputs();
         const githubApiClient = new GitHubApiClient(config.accessToken);
         const issueContentParser = new IssueContentParser();
-        const mermaidRender = new MermaidRender();
+        const mermaidRender = new MermaidRender(config.includeLegend);
 
         const rootIssue = await githubApiClient.getIssue(config.rootIssue);
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
@@ -50,14 +50,12 @@ const run = async (): Promise<void> => {
             return;
         }
 
-        core.info("Updating root issue...");
+        core.info("Updating root issue content...");
         await githubApiClient.updateIssueContent(config.rootIssue, updatedIssueContent);
         core.info("Root issue is updated.");
-    } catch (error) {
-        if (error instanceof Error) {
-            core.setFailed(error.message);
-            throw error;
-        }
+    } catch (error: unknown) {
+        core.setFailed(error instanceof Error ? error.message : (error as string));
+        throw error;
     }
 };
 

@@ -2,24 +2,49 @@
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 88:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseInputs = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(918);
 const parseInputs = () => {
-    const rootIssueUrl = "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/1";
+    const rootIssueUrl = core.getInput("root-issue-url", { required: true });
     const rootIssue = (0, utils_1.parseIssueUrl)(rootIssueUrl);
     if (!rootIssue) {
         throw new Error(`Failed to extract issue details from url '${rootIssueUrl}'`);
     }
     return {
         rootIssue,
-        accessToken: "",
-        sectionTitle: "Spec graph",
-        dryRun: false
+        sectionTitle: core.getInput("section-title", { required: true }),
+        includeLegend: core.getBooleanInput('include-legend'),
+        accessToken: core.getInput("access-token", { required: true }),
+        dryRun: core.getBooleanInput("dry-run"),
     };
 };
 exports.parseInputs = parseInputs;
@@ -152,7 +177,7 @@ class IssueContentParser {
         const contentLines = (_b = (_a = issue.body) === null || _a === void 0 ? void 0 : _a.split("\n")) !== null && _b !== void 0 ? _b : [];
         const sectionStartIndex = contentLines.findIndex(x => this.isMarkdownHeaderLine(x, sectionTitle));
         if (sectionStartIndex === -1) {
-            throw `Markdown header '${sectionTitle}' is not found in issue body:\n ${issue.body}`;
+            throw new Error(`Markdown header '${sectionTitle}' is not found in issue body.`);
         }
         const sectionEndIndex = contentLines.findIndex((x, index) => index > sectionStartIndex && this.isMarkdownHeaderLine(x));
         return [
@@ -176,7 +201,7 @@ class IssueContentParser {
         return trimmedLine.toLowerCase() === sectionTitle.toLocaleLowerCase();
     }
     isTaskListLine(str) {
-        return str.startsWith("- [ ] ");
+        return str.startsWith("- [ ] ") || str.startsWith("- [x] ");
     }
     isDependencyLine(str) {
         const dependencyLinePrefixes = ["Dependencies: ", "Predecessors: ", "Depends on ", "Depends on: "];
@@ -230,7 +255,7 @@ const run = async () => {
         const config = (0, config_1.parseInputs)();
         const githubApiClient = new github_api_client_1.GitHubApiClient(config.accessToken);
         const issueContentParser = new issue_content_parser_1.IssueContentParser();
-        const mermaidRender = new mermaid_render_1.MermaidRender();
+        const mermaidRender = new mermaid_render_1.MermaidRender(config.includeLegend);
         const rootIssue = await githubApiClient.getIssue(config.rootIssue);
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
         core.info(`Found ${rootIssueTasklist.length} work items in task list.`);
@@ -256,15 +281,13 @@ const run = async () => {
             console.log("Action is run in dry-run mode. Root issue won't be updated");
             return;
         }
-        core.info("Updating root issue...");
+        core.info("Updating root issue content...");
         await githubApiClient.updateIssueContent(config.rootIssue, updatedIssueContent);
         core.info("Root issue is updated.");
     }
     catch (error) {
-        if (error instanceof Error) {
-            core.setFailed(error.message);
-            throw error;
-        }
+        core.setFailed(error instanceof Error ? error.message : error);
+        throw error;
     }
 };
 run();
@@ -286,6 +309,24 @@ class MermaidNode {
         this.status = status;
         this.url = url;
     }
+    getWrappedTitle() {
+        const maxWidth = 40;
+        const words = this.title.split(/\s+/);
+        let result = words[0];
+        let lastLength = result.length;
+        for (let wordIndex = 1; wordIndex < words.length; wordIndex++) {
+            if (lastLength + words[wordIndex].length >= maxWidth) {
+                result += "\n";
+                lastLength = 0;
+            }
+            else {
+                result += " ";
+            }
+            result += words[wordIndex];
+            lastLength += words[wordIndex].length;
+        }
+        return result;
+    }
     static createFromGitHubIssue(issue) {
         return new MermaidNode(`issue${issue.id}`, issue.title, MermaidNode.getNodeStatusFromGitHubIssue(issue), issue.html_url);
     }
@@ -293,7 +334,7 @@ class MermaidNode {
         if (issue.state !== "open") {
             return "completed";
         }
-        if (issue.assignee !== null) {
+        if (issue.assignee) {
             return "started";
         }
         return "notstarted";
@@ -318,12 +359,15 @@ exports.MermaidNode = MermaidNode;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MermaidRender = void 0;
 class MermaidRender {
+    constructor(includeLegend) {
+        this.includeLegend = includeLegend;
+    }
     render(graph) {
         return `
+${this.renderLegendSection()}
 \`\`\`mermaid
 flowchart TD
 ${this.renderCssSection()}
-${this.renderLegendSection()}
 ${this.renderIssuesSection(graph.vertices)}
 ${this.renderDependencies(graph.edges)}
 \`\`\`
@@ -341,7 +385,14 @@ classDef completed fill:#ccffd8,color:#000;
 `;
     }
     renderLegendSection() {
+        if (!this.includeLegend) {
+            return "";
+        }
         return `
+\`\`\`mermaid
+flowchart TD
+${this.renderCssSection()}
+
 %% <Legend>
 
 subgraph legend["Legend"]
@@ -353,6 +404,7 @@ subgraph legend["Legend"]
 end
 
 %% </Legend>
+\`\`\`
 `;
     }
     renderIssuesSection(issues) {
@@ -366,7 +418,7 @@ ${renderedGraphIssues}
 `;
     }
     renderIssue(issue) {
-        let result = `${issue.nodeId}("${issue.title}"):::${issue.status};`;
+        let result = `${issue.nodeId}("${issue.getWrappedTitle()}"):::${issue.status};`;
         if (issue.url) {
             result += `\nclick ${issue.nodeId} href "${issue.url}" _blank;`;
         }

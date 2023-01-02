@@ -5,6 +5,18 @@ inputs:
   root-issue-url:
     description: 'Url of root issue'
     required: true
+  access-token:
+    description: 'GitHub API Token with read and write access to root issue and read access to all tasklist issues'
+    required: true
+  section-title:
+    description: 'Title of markdown header where mermaid chart should be placed'
+    required: true
+  includeLegend:
+    description: 'Set this option to include legend to mermaid diagram'
+    required: false
+  dryRun:
+    description: 'Set this option to not update root issue with updated mermaid diagram and only print new diagram to output'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

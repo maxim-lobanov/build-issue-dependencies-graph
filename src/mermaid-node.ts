@@ -10,6 +10,27 @@ export class MermaidNode {
         public readonly url?: string
     ) {}
 
+    public getWrappedTitle(): string {
+        const maxWidth = 40;
+        const words = this.title.split(/\s+/);
+
+        let result = words[0];
+        let lastLength = result.length;
+        for (let wordIndex = 1; wordIndex < words.length; wordIndex++) {
+            if (lastLength + words[wordIndex].length >= maxWidth) {
+                result += "\n";
+                lastLength = 0;
+            } else {
+                result += " ";
+            }
+
+            result += words[wordIndex];
+            lastLength += words[wordIndex].length;
+        }
+
+        return result;
+    }
+
     public static createFromGitHubIssue(issue: GitHubIssue): MermaidNode {
         return new MermaidNode(
             `issue${issue.id}`,
@@ -24,7 +45,7 @@ export class MermaidNode {
             return "completed";
         }
 
-        if (issue.assignee !== null) {
+        if (issue.assignee) {
             return "started";
         }
 

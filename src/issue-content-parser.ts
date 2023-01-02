@@ -26,7 +26,7 @@ export class IssueContentParser {
 
         const sectionStartIndex = contentLines.findIndex(x => this.isMarkdownHeaderLine(x, sectionTitle));
         if (sectionStartIndex === -1) {
-            throw `Markdown header '${sectionTitle}' is not found in issue body:\n ${issue.body}`;
+            throw new Error(`Markdown header '${sectionTitle}' is not found in issue body.`);
         }
 
         const sectionEndIndex = contentLines.findIndex(
@@ -59,7 +59,7 @@ export class IssueContentParser {
     }
 
     public isTaskListLine(str: string): boolean {
-        return str.startsWith("- [ ] ");
+        return str.startsWith("- [ ] ") || str.startsWith("- [x] ");
     }
 
     public isDependencyLine(str: string): boolean {

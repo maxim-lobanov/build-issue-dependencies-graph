@@ -6,9 +6,9 @@ export class MermaidRender {
 
     public render(graph: Graph): string {
         return `
-${this.renderLegendSection()}
 \`\`\`mermaid
 flowchart TD
+${this.renderLegendSection()}
 ${this.renderCssSection()}
 ${this.renderIssuesSection(graph.vertices)}
 ${this.renderDependencies(graph.edges)}
@@ -34,12 +34,8 @@ classDef completed fill:#ccffd8,color:#000;
         }
 
         return `
-\`\`\`mermaid
-flowchart TD
-${this.renderCssSection()}
-
 %% <Legend>
-
+legend --> start
 subgraph legend["Legend"]
     direction LR;
     notstarted("Issue is not started"):::notstarted;
@@ -49,7 +45,6 @@ subgraph legend["Legend"]
 end
 
 %% </Legend>
-\`\`\`
 `;
     }
 

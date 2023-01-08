@@ -157,7 +157,7 @@ classDef completed fill:#ccffd8,color:#000;
 
 %% <Issues>
 
-start("Start"):::notstarted;
+start("Start"):::default;
 
 issue1488484564("[TEST ISSUE] Child issue 1"):::completed;
 click issue1488484564 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/2" _blank;
@@ -180,7 +180,7 @@ click issue1524488472 href "https://github.com/maxim-lobanov/build-issue-depende
 issue1524488513("[TEST ISSUE] Child issue 7"):::notstarted;
 click issue1524488513 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/8" _blank;
 
-finish("Finish"):::notstarted;
+finish("Finish"):::default;
 
 %% </Issues>
 

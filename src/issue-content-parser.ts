@@ -48,9 +48,6 @@ export class IssueContentParser {
         const formattedIssueBody = rawIssueBody.replaceAll("\r\n", "\n");
         const formattedNewIssueContent = newIssueContent.replaceAll("\r\n", "\n");
 
-        console.log(JSON.stringify(formattedIssueBody));
-        console.log(JSON.stringify(formattedNewIssueContent));
-
         return formattedIssueBody === formattedNewIssueContent;
     }
 

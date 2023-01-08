@@ -18,8 +18,8 @@ jobs:
         name: 'Build issues dependency graph'
         id: build-issue-dependencies-graph
         with:
-          root-issue-url: '${{ github.event.inputs.root-issue-url }}'
-          section-title: '${{ github.event.inputs.section-title }}'
+          root-issue-url: '${{ matrix.root-issue-url }}'
+          section-title: '${{ matrix.section-title }}'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           include-legend: true
           include-finish-node: true

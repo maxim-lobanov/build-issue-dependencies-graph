@@ -48,6 +48,13 @@ const run = async (): Promise<void> => {
         core.info(updatedIssueContent);
         core.endGroup();
 
+        if (issueContentParser.isIssueContentIdentical(rootIssue, updatedIssueContent)) {
+            core.info(
+                "Skipping update of root issue content because new content is identical to current content. No changes in mermaid in diagram."
+            );
+            return;
+        }
+
         if (inputs.dryRun) {
             console.log("Action is run in dry-run mode. Root issue won't be updated");
             return;

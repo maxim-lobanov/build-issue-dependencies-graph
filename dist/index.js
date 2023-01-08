@@ -166,16 +166,14 @@ exports.IssueContentParser = void 0;
 const utils_1 = __nccwpck_require__(918);
 class IssueContentParser {
     extractIssueTasklist(issue) {
-        var _a, _b;
-        const contentLines = (_b = (_a = issue.body) === null || _a === void 0 ? void 0 : _a.split("\n")) !== null && _b !== void 0 ? _b : [];
+        const contentLines = issue.body?.split("\n") ?? [];
         return contentLines
             .filter(x => this.isTaskListLine(x))
             .map(x => (0, utils_1.parseIssueUrl)(x))
             .filter((x) => x !== null);
     }
     extractIssueDependencies(issue) {
-        var _a, _b;
-        const contentLines = (_b = (_a = issue.body) === null || _a === void 0 ? void 0 : _a.split("\n")) !== null && _b !== void 0 ? _b : [];
+        const contentLines = issue.body?.split("\n") ?? [];
         return contentLines
             .filter(x => this.isDependencyLine(x))
             .map(x => (0, utils_1.parseIssuesUrls)(x))
@@ -183,8 +181,7 @@ class IssueContentParser {
             .filter((x) => x !== null);
     }
     replaceIssueContent(issue, sectionTitle, newSectionContent) {
-        var _a, _b;
-        const contentLines = (_b = (_a = issue.body) === null || _a === void 0 ? void 0 : _a.split("\n")) !== null && _b !== void 0 ? _b : [];
+        const contentLines = issue.body?.split("\n") ?? [];
         const sectionStartIndex = contentLines.findIndex(x => this.isMarkdownHeaderLine(x, sectionTitle));
         if (sectionStartIndex === -1) {
             throw new Error(`Markdown header '${sectionTitle}' is not found in issue body.`);
@@ -196,6 +193,16 @@ class IssueContentParser {
             "",
             ...contentLines.slice(sectionEndIndex !== -1 ? sectionEndIndex : contentLines.length),
         ].join("\n");
+    }
+    isIssueContentIdentical(issue, newIssueContent) {
+        // GitHub automatically replace "\n" to "\r\n" line endings when issue body is modified through GitHub UI.
+        // Replace "\r\n" to "\n" before comparing content to avoid unnecessary issue updates.
+        const rawIssueBody = issue.body ?? "";
+        const formattedIssueBody = rawIssueBody.replaceAll("\r\n", "\n");
+        const formattedNewIssueContent = newIssueContent.replaceAll("\r\n", "\n");
+        console.log(JSON.stringify(formattedIssueBody));
+        console.log(JSON.stringify(formattedNewIssueContent));
+        return formattedIssueBody === formattedNewIssueContent;
     }
     isMarkdownHeaderLine(str, sectionTitle) {
         if (!str.startsWith("#")) {
@@ -290,6 +297,10 @@ const run = async () => {
         core.startGroup("Updated root issue content");
         core.info(updatedIssueContent);
         core.endGroup();
+        if (issueContentParser.isIssueContentIdentical(rootIssue, updatedIssueContent)) {
+            core.info("Skipping update of root issue content because new content is identical to current content. No changes in mermaid in diagram.");
+            return;
+        }
         if (inputs.dryRun) {
             console.log("Action is run in dry-run mode. Root issue won't be updated");
             return;

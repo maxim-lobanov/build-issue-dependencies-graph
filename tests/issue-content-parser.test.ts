@@ -366,6 +366,35 @@ new diagram content
         });
     });
 
+    describe("isIssueContentIdentical", () => {
+        it("content is identical", () => {
+            const issue = {
+                body: "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\ntest content\n```\n\r\n## Header 3\r\nFooter",
+            } as GitHubIssue;
+            const newIssueContent =
+                "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\ntest content\n```\n\r\n## Header 3\r\nFooter";
+            expect(issueContentParser.isIssueContentIdentical(issue, newIssueContent)).toBeTruthy();
+        });
+
+        it("content is identical but different line endings", () => {
+            const issue = {
+                body: "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\r\ntest content\r\n```\r\n\r\n## Header 3\r\nFooter",
+            } as GitHubIssue;
+            const newIssueContent =
+                "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\ntest content\n```\n\r\n## Header 3\r\nFooter";
+            expect(issueContentParser.isIssueContentIdentical(issue, newIssueContent)).toBeTruthy();
+        });
+
+        it("content is different", () => {
+            const issue = {
+                body: "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\r\ntest content\r\n```\r\n\r\n## Header 3\r\nFooter",
+            } as GitHubIssue;
+            const newIssueContent =
+                "# Header\r\nHello world\r\n\r\n## Header 2\r\n\r\n```mermaid\ntest content 2\n```\n\r\n## Header 3\r\nFooter";
+            expect(issueContentParser.isIssueContentIdentical(issue, newIssueContent)).toBeFalsy();
+        });
+    });
+
     describe("isMarkdownHeaderLine", () => {
         it("non-header line", () => {
             expect(issueContentParser.isMarkdownHeaderLine("Epic 1")).toBeFalsy();

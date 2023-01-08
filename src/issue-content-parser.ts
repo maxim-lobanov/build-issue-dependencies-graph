@@ -41,6 +41,19 @@ export class IssueContentParser {
         ].join("\n");
     }
 
+    public isIssueContentIdentical(issue: GitHubIssue, newIssueContent: string) {
+        // GitHub automatically replace "\n" to "\r\n" line endings when issue body is modified through GitHub UI.
+        // Replace "\r\n" to "\n" before comparing content to avoid unnecessary issue updates.
+        const rawIssueBody = issue.body ?? "";
+        const formattedIssueBody = rawIssueBody.replaceAll("\r\n", "\n");
+        const formattedNewIssueContent = newIssueContent.replaceAll("\r\n", "\n");
+
+        console.log(JSON.stringify(formattedIssueBody));
+        console.log(JSON.stringify(formattedNewIssueContent));
+
+        return formattedIssueBody === formattedNewIssueContent;
+    }
+
     public isMarkdownHeaderLine(str: string, sectionTitle?: string): boolean {
         if (!str.startsWith("#")) {
             return false;

@@ -14,7 +14,10 @@ jobs:
           - root-issue-url: 'https://github.com/owner/repo/issues/2'
             section-title: 'Spec Diagram'
     steps:
-      - uses: maxim-lobanov/build-issue-dependencies-graph@v1
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: ./
         name: 'Build issues dependency graph'
         id: build-issue-dependencies-graph
         with:

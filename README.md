@@ -3,6 +3,8 @@
 This action is intended for building dependencies graph between issues in epic, rendering mermaid diagram with this graph and automatically updating epic issue body with diagram.
 It can be useful during work on big epics where it is tricky to keep all dependencies in mind.
 
+All nodes of diagram are clickable and link leads to issue page. Also nodes are colored according to issue status: Green (issue is closed), Yellow (issue is opened and someone is assigned to it), White (issue is opened and no assignees). 
+
 ## Parameters
 | Parameter | Description |
 |-|-|
@@ -53,6 +55,35 @@ It can be useful during work on big epics where it is tricky to keep all depende
 
 ## Advanced usage
 
+### Workflow to trigger action on schedule
+```
+on:
+  schedule:
+    - cron: '* */12 * * *' # Twice per day
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - root-issue-url: 'https://github.com/owner/repo/issues/1'
+            section-title: 'Spec Diagram'
+          - root-issue-url: 'https://github.com/owner/repo/issues/2'
+            section-title: 'Spec Diagram'
+    steps:
+      - uses: maxim-lobanov/build-issue-dependencies-graph@v1
+        name: 'Build issues dependency graph'
+        id: build-issue-dependencies-graph
+        with:
+          root-issue-url: '${{ matrix.root-issue-url }}'
+          section-title: '${{ matrix.section-title }}'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          include-legend: true
+          include-finish-node: true
+```
+
 ### Workflow to trigger action manually
 ```yml
 on:
@@ -80,47 +111,22 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: maxim-lobanov/build-issue-dependencies-graph@v1
-        name: 'Build issues dependency graph'
-        id: build-issue-dependencies-graph
-        with:
-          root-issue-url: '${{ github.event.inputs.root-issue-url }}'
-          section-title: '${{ github.event.inputs.section-title }}'
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
-          include-legend: '${{ github.event.inputs.include-legend }}'
-          include-finish-node: '${{ github.event.inputs.include-finish-node }}'
-          dry-run: '${{ github.event.inputs.dry-run }}'
+    - uses: maxim-lobanov/build-issue-dependencies-graph@v1
+      name: 'Build issues dependency graph'
+      id: build-issue-dependencies-graph
+      with:
+        root-issue-url: '${{ github.event.inputs.root-issue-url }}'
+        section-title: '${{ github.event.inputs.section-title }}'
+        github-token: '${{ secrets.GITHUB_TOKEN }}'
+        include-legend: '${{ github.event.inputs.include-legend }}'
+        include-finish-node: '${{ github.event.inputs.include-finish-node }}'
+        dry-run: '${{ github.event.inputs.dry-run }}'
+    
+    - run: |
+        cat << 'EOF' > $GITHUB_STEP_SUMMARY
+        ${{ steps.build-issue-dependencies-graph.outputs.mermaid-diagram }}
+        EOF
 ```
-
-### Workflow to trigger action on schedule
-```
-on:
-  schedule:
-    - cron: '* */12 * * *' # Twice per day
-
-jobs:
-  run:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - root-issue-url: 'https://github.com/owner/repo/issues/1'
-            section-title: 'Spec Diagram'
-          - root-issue-url: 'https://github.com/owner/repo/issues/2'
-            section-title: 'Spec Diagram'
-    steps:
-      - uses: maxim-lobanov/build-issue-dependencies-graph@v1
-        name: 'Build issues dependency graph'
-        id: build-issue-dependencies-graph
-        with:
-          root-issue-url: '${{ github.event.inputs.root-issue-url }}'
-          section-title: '${{ github.event.inputs.section-title }}'
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
-          include-legend: true
-          include-finish-node: true
-```
-
 
 ## Mermaid examples
 
@@ -159,8 +165,20 @@ click issue1488484564 href "https://github.com/maxim-lobanov/build-issue-depende
 issue1488484695("[TEST ISSUE] Child issue 2"):::completed;
 click issue1488484695 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/3" _blank;
 
-issue1488484833("[TEST ISSUE] Child issue 3"):::notstarted;
+issue1488484833("[TEST ISSUE] Child issue 3"):::completed;
 click issue1488484833 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/4" _blank;
+
+issue1524488391("[TEST ISSUE] Child issue 4"):::completed;
+click issue1524488391 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/5" _blank;
+
+issue1524488450("[TEST ISSUE] Child issue 5"):::completed;
+click issue1524488450 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/6" _blank;
+
+issue1524488472("[TEST ISSUE] Child issue 6"):::notstarted;
+click issue1524488472 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/7" _blank;
+
+issue1524488513("[TEST ISSUE] Child issue 7"):::notstarted;
+click issue1524488513 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/8" _blank;
 
 finish("Finish"):::notstarted;
 
@@ -171,9 +189,16 @@ finish("Finish"):::notstarted;
 
 start --> issue1488484564;
 start --> issue1488484695;
+start --> issue1524488391;
+start --> issue1524488450;
 issue1488484564 --> issue1488484833;
 issue1488484695 --> issue1488484833;
-issue1488484833 --> finish;
+issue1488484833 --> issue1524488472;
+issue1524488450 --> issue1524488472;
+issue1524488450 --> issue1524488513;
+issue1524488391 --> finish;
+issue1524488472 --> finish;
+issue1524488513 --> finish;
 
 %% </Dependencies>
 

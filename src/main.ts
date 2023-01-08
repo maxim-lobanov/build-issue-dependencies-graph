@@ -36,7 +36,7 @@ const run = async (): Promise<void> => {
         core.startGroup("Mermaid diagram");
         core.info(renderedContent);
         core.endGroup();
-        
+
         core.info("Preparing updated root issue content...");
         const updatedIssueContent = issueContentParser.replaceIssueContent(
             rootIssue,

@@ -13,9 +13,11 @@ on:
       include-legend:
         description: 'Include legend'
         type: boolean
+        default: true
       include-finish-node:
         description: 'Include finish node'
         type: boolean
+        default: true
       dry-run: 
         description: 'Dry run'
         type: boolean

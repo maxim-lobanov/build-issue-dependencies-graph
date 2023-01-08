@@ -39,4 +39,6 @@ jobs:
         dry-run: '${{ github.event.inputs.dry-run }}'
     
     - run: |
-        echo '${{ steps.build-issue-dependencies-graph.outputs.mermaid-diagram }}' > $GITHUB_OUTPUT
+        cat << 'EOF' > $GITHUB_OUTPUT
+        ${{ steps.build-issue-dependencies-graph.outputs.mermaid-diagram }}
+        EOF

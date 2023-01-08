@@ -39,4 +39,4 @@ jobs:
         dry-run: '${{ github.event.inputs.dry-run }}'
     
     - run: |
-        '${{ steps.build-issue-dependencies-graph.outputs.mermaid-diagram }}' > $GITHUB_OUTPUT
+        echo '${{ steps.build-issue-dependencies-graph.outputs.mermaid-diagram }}' > $GITHUB_OUTPUT

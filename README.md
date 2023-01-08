@@ -59,7 +59,7 @@ All nodes of diagram are clickable and link leads to issue page. Also nodes are 
 ```
 on:
   schedule:
-    - cron: '* */12 * * *' # Twice per day
+    - cron: '0 */12 * * *' # Twice per day
 
 jobs:
   run:

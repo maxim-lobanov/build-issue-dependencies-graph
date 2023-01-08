@@ -9,7 +9,7 @@ export interface GitHubIssue {
     number: number;
     title: string;
     body?: string | null;
-    assignee: unknown;
+    assignees?: Array<unknown> | null;
     html_url: string;
     state: string;
 }

@@ -8,18 +8,18 @@ import { MermaidRender } from "./mermaid-render";
 
 const run = async (): Promise<void> => {
     try {
-        const config = parseInputs();
-        const githubApiClient = new GitHubApiClient(config.accessToken);
+        const inputs = parseInputs();
+        const githubApiClient = new GitHubApiClient(inputs.githubToken);
         const issueContentParser = new IssueContentParser();
-        const mermaidRender = new MermaidRender(config.includeLegend);
+        const mermaidRender = new MermaidRender(inputs.includeLegend);
 
-        const rootIssue = await githubApiClient.getIssue(config.rootIssue);
+        const rootIssue = await githubApiClient.getIssue(inputs.rootIssue);
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
 
         core.info(`Found ${rootIssueTasklist.length} work items in task list.`);
 
         core.info("Building dependency graph...");
-        const graphBuilder = new GraphBuilder();
+        const graphBuilder = new GraphBuilder(inputs.includeFinishNode);
         for (const issueRef of rootIssueTasklist) {
             const issue = await githubApiClient.getIssue(issueRef);
             const issueDetails = MermaidNode.createFromGitHubIssue(issue);
@@ -31,27 +31,29 @@ const run = async (): Promise<void> => {
         const graph = graphBuilder.getGraph();
         const renderedContent = mermaidRender.render(graph);
 
+        core.info("Rendering dependency graph into mermaid...");
         core.startGroup("Mermaid diagram");
         core.info(renderedContent);
         core.endGroup();
 
+        core.info("Preparing updated root issue content...");
         const updatedIssueContent = issueContentParser.replaceIssueContent(
             rootIssue,
-            config.sectionTitle,
+            inputs.sectionTitle,
             renderedContent
         );
 
-        core.startGroup("Updated issue content");
+        core.startGroup("Updated root issue content");
         core.info(updatedIssueContent);
         core.endGroup();
 
-        if (config.dryRun) {
+        if (inputs.dryRun) {
             console.log("Action is run in dry-run mode. Root issue won't be updated");
             return;
         }
 
         core.info("Updating root issue content...");
-        await githubApiClient.updateIssueContent(config.rootIssue, updatedIssueContent);
+        await githubApiClient.updateIssueContent(inputs.rootIssue, updatedIssueContent);
         core.info("Root issue is updated.");
     } catch (error: unknown) {
         core.setFailed(error instanceof Error ? error.message : (error as string));

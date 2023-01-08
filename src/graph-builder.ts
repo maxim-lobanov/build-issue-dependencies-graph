@@ -13,7 +13,7 @@ export interface Graph {
 }
 
 interface InternalGraphNode {
-    value: MermaidNode | null;
+    value?: MermaidNode;
     predecessors: InternalGraphNode[];
     successors: InternalGraphNode[];
 }
@@ -21,14 +21,13 @@ interface InternalGraphNode {
 export class GraphBuilder {
     private readonly nodes = new Map<string, InternalGraphNode>();
 
+    constructor(private readonly includeFinishNode: boolean) {}
+
     private buildNodeKey(issueRef: GitHubIssueReference): string {
         return `${issueRef.repoOwner}/${issueRef.repoName}/${issueRef.issueNumber}`;
     }
 
-    private getOrCreateGraphNode(
-        issueReference: GitHubIssueReference,
-        issue: MermaidNode | null = null
-    ): InternalGraphNode {
+    private getOrCreateGraphNode(issueReference: GitHubIssueReference, issue?: MermaidNode): InternalGraphNode {
         const nodeKey = this.buildNodeKey(issueReference);
         let graphNode = this.nodes.get(nodeKey);
         if (!graphNode) {
@@ -56,11 +55,13 @@ export class GraphBuilder {
         const vertices = graphNodes.map(x => x.value).filter((x): x is MermaidNode => x !== null);
 
         const startNode = MermaidNode.createStartNode();
-        const finishNode = MermaidNode.createFinishNode();
+        const finishNode = this.includeFinishNode ? MermaidNode.createFinishNode() : null;
 
         const edgesFromStartNode: NullablePartial<GraphEdge>[] = graphNodes
             .filter(x => x.predecessors.length === 0)
             .map(x => ({ from: startNode, to: x.value }));
+        // No need to look at 'includeFinishNode' here. Edges to finish node will be filtered by 'filterNullEdges' later
+        // because finishNode is null
         const edgesToFinishNode: NullablePartial<GraphEdge>[] = graphNodes
             .filter(x => x.successors.length === 0)
             .map(x => ({ from: x.value, to: finishNode }));
@@ -68,14 +69,20 @@ export class GraphBuilder {
             .map(x => x.successors.map(y => ({ from: x.value, to: y.value })))
             .flat();
 
-        const allVertices = [startNode, ...vertices, finishNode];
-        const allEdges = [...edgesFromStartNode, ...internalEdges, ...edgesToFinishNode].filter(
-            (x: NullablePartial<GraphEdge>): x is GraphEdge => Boolean(x.from) && Boolean(x.to)
-        );
+        const allVertices = [startNode, ...vertices, finishNode].filter(this.filterNullVertices);
+        const allEdges = [...edgesFromStartNode, ...internalEdges, ...edgesToFinishNode].filter(this.filterNullEdges);
 
         return {
             vertices: allVertices,
             edges: allEdges,
         };
+    }
+
+    private filterNullVertices(x: MermaidNode | null): x is MermaidNode {
+        return Boolean(x);
+    }
+
+    private filterNullEdges(x: NullablePartial<GraphEdge>): x is GraphEdge {
+        return Boolean(x) && Boolean(x.from) && Boolean(x.to);
     }
 }

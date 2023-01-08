@@ -162,7 +162,6 @@ Hello
 Depends on https://github.com/actions/setup-node/issues/101
 depends on: https://github.com/actions/setup-node/issues/102
 Dependencies: https://github.com/actions/setup-node/issues/103
-Predecessors: https://github.com/actions/setup-node/issues/104
 
 Test content
 `,
@@ -172,7 +171,6 @@ Test content
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 101 },
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 102 },
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 103 },
-                { repoOwner: "actions", repoName: "setup-node", issueNumber: 104 },
             ]);
         });
     });
@@ -410,7 +408,6 @@ new diagram content
             expect(issueContentParser.isDependencyLine("Depends on: issue 1, issue 2")).toBeTruthy();
             expect(issueContentParser.isDependencyLine("Depends on issue 1")).toBeTruthy();
             expect(issueContentParser.isDependencyLine("Dependencies: issue 1")).toBeTruthy();
-            expect(issueContentParser.isDependencyLine("Predecessors: issue 1")).toBeTruthy();
         });
 
         it("non-dependency line", () => {
@@ -420,8 +417,6 @@ new diagram content
             expect(issueContentParser.isDependencyLine("Depends onissue 1")).toBeFalsy();
             expect(issueContentParser.isDependencyLine("Dependencies:issue 1")).toBeFalsy();
             expect(issueContentParser.isDependencyLine("Dependencies issue 1")).toBeFalsy();
-            expect(issueContentParser.isDependencyLine("Predecessors:issue 1")).toBeFalsy();
-            expect(issueContentParser.isDependencyLine("Predecessors issue 1")).toBeFalsy();
         });
     });
 });

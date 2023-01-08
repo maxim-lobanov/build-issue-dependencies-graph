@@ -1,0 +1,41 @@
+name: Build action
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set Node.JS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+
+    - name: npm install
+      run: npm install
+
+    - name: Build
+      run: npm run build
+    
+    - name: Run tests
+      run: npm run test
+
+    - name: Run Prettier
+      run: npm run format-check
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Compare the expected and actual dist directories
+      run: |
+        if [ "$(git diff --ignore-space-at-eol ${{inputs.folder-path}} | wc -l)" -gt "0" ]; then
+          echo "Detected uncommitted changes after the build. See the status below:"
+          git diff
+          exit 1
+        fi

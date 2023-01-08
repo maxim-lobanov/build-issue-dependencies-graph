@@ -9,7 +9,7 @@ describe("MermaidNode", () => {
                 number: 1,
                 title: "My Issue 1",
                 body: "Test content",
-                assignee: {},
+                assignees: [{}],
                 html_url: "github.com",
                 state: "closed",
             };
@@ -26,7 +26,7 @@ describe("MermaidNode", () => {
                 number: 1,
                 title: "My Issue 1",
                 body: "Test content",
-                assignee: {},
+                assignees: [{}],
                 html_url: "github.com",
                 state: "open",
             };
@@ -43,7 +43,7 @@ describe("MermaidNode", () => {
                 number: 1,
                 title: "My Issue 1",
                 body: "Test content",
-                assignee: undefined,
+                assignees: [],
                 html_url: "github.com",
                 state: "open",
             };

@@ -2,15 +2,16 @@ import * as core from "@actions/core";
 import { GitHubIssueReference } from "./models";
 import { parseIssueUrl } from "./utils";
 
-export interface Config {
+export interface Inputs {
     rootIssue: GitHubIssueReference;
     sectionTitle: string;
+    githubToken: string;
     includeLegend: boolean;
-    accessToken: string;
+    includeFinishNode: boolean;
     dryRun: boolean;
 }
 
-export const parseInputs = (): Config => {
+export const parseInputs = (): Inputs => {
     const rootIssueUrl = core.getInput("root-issue-url", { required: true });
     const rootIssue = parseIssueUrl(rootIssueUrl);
     if (!rootIssue) {
@@ -20,8 +21,9 @@ export const parseInputs = (): Config => {
     return {
         rootIssue,
         sectionTitle: core.getInput("section-title", { required: true }),
+        githubToken: core.getInput("github-token", { required: true }),
         includeLegend: core.getBooleanInput("include-legend"),
-        accessToken: core.getInput("access-token", { required: true }),
+        includeFinishNode: core.getBooleanInput("include-finish-node"),
         dryRun: core.getBooleanInput("dry-run"),
     };
 };

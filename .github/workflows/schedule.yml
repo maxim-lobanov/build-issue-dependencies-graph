@@ -1,0 +1,25 @@
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Twice per day
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - root-issue-url: 'https://github.com/owner/repo/issues/1'
+            section-title: 'Spec Diagram'
+          - root-issue-url: 'https://github.com/owner/repo/issues/2'
+            section-title: 'Spec Diagram'
+    steps:
+      - uses: maxim-lobanov/build-issue-dependencies-graph@v1
+        name: 'Build issues dependency graph'
+        id: build-issue-dependencies-graph
+        with:
+          root-issue-url: '${{ github.event.inputs.root-issue-url }}'
+          section-title: '${{ github.event.inputs.section-title }}'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          include-legend: true
+          include-finish-node: true

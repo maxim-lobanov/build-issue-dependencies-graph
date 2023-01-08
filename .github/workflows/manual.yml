@@ -1,0 +1,39 @@
+name: Manual trigger action
+on:
+  workflow_dispatch:
+    inputs:
+      root-issue-url:
+        description: 'Root issue url'
+        required: true
+        type: string
+      section-title:
+        description: 'Section title'
+        required: true
+        type: string
+      include-legend:
+        description: 'Include legend'
+        type: boolean
+      include-finish-node:
+        description: 'Include finish node'
+        type: boolean
+      dry-run: 
+        description: 'Dry run'
+        type: boolean
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: ./
+      name: 'Build issues dependency graph'
+      id: build-issue-dependencies-graph
+      with:
+        root-issue-url: '${{ github.event.inputs.root-issue-url }}'
+        section-title: '${{ github.event.inputs.section-title }}'
+        github-token: '${{ secrets.GITHUB_TOKEN }}'
+        include-legend: '${{ github.event.inputs.include-legend }}'
+        include-finish-node: '${{ github.event.inputs.include-finish-node }}'
+        dry-run: '${{ github.event.inputs.dry-run }}'

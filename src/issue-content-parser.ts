@@ -63,7 +63,7 @@ export class IssueContentParser {
     }
 
     public isDependencyLine(str: string): boolean {
-        const dependencyLinePrefixes = ["Dependencies: ", "Predecessors: ", "Depends on ", "Depends on: "];
+        const dependencyLinePrefixes = ["Dependencies: ", "Depends on ", "Depends on: "];
         const formattedLine = str.toLowerCase();
         return dependencyLinePrefixes.some(x => formattedLine.startsWith(x.toLowerCase()));
     }

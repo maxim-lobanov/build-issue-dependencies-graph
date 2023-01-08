@@ -42,8 +42,9 @@ const parseInputs = () => {
     return {
         rootIssue,
         sectionTitle: core.getInput("section-title", { required: true }),
-        includeLegend: core.getBooleanInput('include-legend'),
-        accessToken: core.getInput("access-token", { required: true }),
+        githubToken: core.getInput("github-token", { required: true }),
+        includeLegend: core.getBooleanInput("include-legend"),
+        includeFinishNode: core.getBooleanInput("include-finish-node"),
         dryRun: core.getBooleanInput("dry-run"),
     };
 };
@@ -95,13 +96,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GraphBuilder = void 0;
 const mermaid_node_1 = __nccwpck_require__(235);
 class GraphBuilder {
-    constructor() {
+    constructor(includeFinishNode) {
+        this.includeFinishNode = includeFinishNode;
         this.nodes = new Map();
     }
     buildNodeKey(issueRef) {
         return `${issueRef.repoOwner}/${issueRef.repoName}/${issueRef.issueNumber}`;
     }
-    getOrCreateGraphNode(issueReference, issue = null) {
+    getOrCreateGraphNode(issueReference, issue) {
         const nodeKey = this.buildNodeKey(issueReference);
         let graphNode = this.nodes.get(nodeKey);
         if (!graphNode) {
@@ -123,22 +125,30 @@ class GraphBuilder {
         const graphNodes = Array.from(this.nodes.values());
         const vertices = graphNodes.map(x => x.value).filter((x) => x !== null);
         const startNode = mermaid_node_1.MermaidNode.createStartNode();
-        const finishNode = mermaid_node_1.MermaidNode.createFinishNode();
+        const finishNode = this.includeFinishNode ? mermaid_node_1.MermaidNode.createFinishNode() : null;
         const edgesFromStartNode = graphNodes
             .filter(x => x.predecessors.length === 0)
             .map(x => ({ from: startNode, to: x.value }));
+        // No need to look at 'includeFinishNode' here. Edges to finish node will be filtered by 'filterNullEdges' later
+        // because finishNode is null
         const edgesToFinishNode = graphNodes
             .filter(x => x.successors.length === 0)
             .map(x => ({ from: x.value, to: finishNode }));
         const internalEdges = graphNodes
             .map(x => x.successors.map(y => ({ from: x.value, to: y.value })))
             .flat();
-        const allVertices = [startNode, ...vertices, finishNode];
-        const allEdges = [...edgesFromStartNode, ...internalEdges, ...edgesToFinishNode].filter((x) => Boolean(x.from) && Boolean(x.to));
+        const allVertices = [startNode, ...vertices, finishNode].filter(this.filterNullVertices);
+        const allEdges = [...edgesFromStartNode, ...internalEdges, ...edgesToFinishNode].filter(this.filterNullEdges);
         return {
             vertices: allVertices,
             edges: allEdges,
         };
+    }
+    filterNullVertices(x) {
+        return Boolean(x);
+    }
+    filterNullEdges(x) {
+        return Boolean(x) && Boolean(x.from) && Boolean(x.to);
     }
 }
 exports.GraphBuilder = GraphBuilder;
@@ -204,7 +214,7 @@ class IssueContentParser {
         return str.startsWith("- [ ] ") || str.startsWith("- [x] ");
     }
     isDependencyLine(str) {
-        const dependencyLinePrefixes = ["Dependencies: ", "Predecessors: ", "Depends on ", "Depends on: "];
+        const dependencyLinePrefixes = ["Dependencies: ", "Depends on ", "Depends on: "];
         const formattedLine = str.toLowerCase();
         return dependencyLinePrefixes.some(x => formattedLine.startsWith(x.toLowerCase()));
     }
@@ -252,15 +262,15 @@ const mermaid_node_1 = __nccwpck_require__(235);
 const mermaid_render_1 = __nccwpck_require__(6288);
 const run = async () => {
     try {
-        const config = (0, config_1.parseInputs)();
-        const githubApiClient = new github_api_client_1.GitHubApiClient(config.accessToken);
+        const inputs = (0, config_1.parseInputs)();
+        const githubApiClient = new github_api_client_1.GitHubApiClient(inputs.githubToken);
         const issueContentParser = new issue_content_parser_1.IssueContentParser();
-        const mermaidRender = new mermaid_render_1.MermaidRender(config.includeLegend);
-        const rootIssue = await githubApiClient.getIssue(config.rootIssue);
+        const mermaidRender = new mermaid_render_1.MermaidRender(inputs.includeLegend);
+        const rootIssue = await githubApiClient.getIssue(inputs.rootIssue);
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
         core.info(`Found ${rootIssueTasklist.length} work items in task list.`);
         core.info("Building dependency graph...");
-        const graphBuilder = new graph_builder_1.GraphBuilder();
+        const graphBuilder = new graph_builder_1.GraphBuilder(inputs.includeFinishNode);
         for (const issueRef of rootIssueTasklist) {
             const issue = await githubApiClient.getIssue(issueRef);
             const issueDetails = mermaid_node_1.MermaidNode.createFromGitHubIssue(issue);
@@ -270,19 +280,21 @@ const run = async () => {
         }
         const graph = graphBuilder.getGraph();
         const renderedContent = mermaidRender.render(graph);
+        core.info("Rendering dependency graph into mermaid...");
         core.startGroup("Mermaid diagram");
         core.info(renderedContent);
         core.endGroup();
-        const updatedIssueContent = issueContentParser.replaceIssueContent(rootIssue, config.sectionTitle, renderedContent);
-        core.startGroup("Updated issue content");
+        core.info("Preparing updated root issue content...");
+        const updatedIssueContent = issueContentParser.replaceIssueContent(rootIssue, inputs.sectionTitle, renderedContent);
+        core.startGroup("Updated root issue content");
         core.info(updatedIssueContent);
         core.endGroup();
-        if (config.dryRun) {
+        if (inputs.dryRun) {
             console.log("Action is run in dry-run mode. Root issue won't be updated");
             return;
         }
         core.info("Updating root issue content...");
-        await githubApiClient.updateIssueContent(config.rootIssue, updatedIssueContent);
+        await githubApiClient.updateIssueContent(inputs.rootIssue, updatedIssueContent);
         core.info("Root issue is updated.");
     }
     catch (error) {
@@ -334,7 +346,7 @@ class MermaidNode {
         if (issue.state !== "open") {
             return "completed";
         }
-        if (issue.assignee) {
+        if (issue.assignees && issue.assignees.length > 0) {
             return "started";
         }
         return "notstarted";
@@ -364,9 +376,9 @@ class MermaidRender {
     }
     render(graph) {
         return `
-${this.renderLegendSection()}
 \`\`\`mermaid
 flowchart TD
+${this.renderLegendSection()}
 ${this.renderCssSection()}
 ${this.renderIssuesSection(graph.vertices)}
 ${this.renderDependencies(graph.edges)}
@@ -389,12 +401,8 @@ classDef completed fill:#ccffd8,color:#000;
             return "";
         }
         return `
-\`\`\`mermaid
-flowchart TD
-${this.renderCssSection()}
-
 %% <Legend>
-
+legend --> start
 subgraph legend["Legend"]
     direction LR;
     notstarted("Issue is not started"):::notstarted;
@@ -404,7 +412,6 @@ subgraph legend["Legend"]
 end
 
 %% </Legend>
-\`\`\`
 `;
     }
     renderIssuesSection(issues) {

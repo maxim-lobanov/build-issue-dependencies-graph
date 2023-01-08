@@ -45,7 +45,7 @@ export class MermaidNode {
             return "completed";
         }
 
-        if (issue.assignee) {
+        if (issue.assignees && issue.assignees.length > 0) {
             return "started";
         }
 

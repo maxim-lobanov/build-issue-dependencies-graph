@@ -37,3 +37,6 @@ jobs:
         include-legend: '${{ github.event.inputs.include-legend }}'
         include-finish-node: '${{ github.event.inputs.include-finish-node }}'
         dry-run: '${{ github.event.inputs.dry-run }}'
+    
+    - run: |
+        '${{ steps.build-issue-dependencies-graph.mermaid-diagram }}' > $GITHUB_OUTPUT

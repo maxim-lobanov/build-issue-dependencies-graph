@@ -23,6 +23,9 @@ inputs:
     description: 'Set this option to not update root issue with updated mermaid diagram and only print new diagram to output'
     required: false
     default: 'false'
+outputs:
+  mermaid-diagram:
+    description: 'Rendered markdown with mermaid diagram'
 runs:
   using: 'node16'
   main: 'dist/index.js'

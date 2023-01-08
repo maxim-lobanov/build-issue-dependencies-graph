@@ -281,6 +281,7 @@ const run = async () => {
         const graph = graphBuilder.getGraph();
         const renderedContent = mermaidRender.render(graph);
         core.info("Rendering dependency graph into mermaid...");
+        core.setOutput("mermaid-diagram", renderedContent);
         core.startGroup("Mermaid diagram");
         core.info(renderedContent);
         core.endGroup();

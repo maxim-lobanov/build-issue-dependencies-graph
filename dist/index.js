@@ -362,10 +362,10 @@ class MermaidNode {
         return "notstarted";
     }
     static createStartNode() {
-        return new MermaidNode("start", "Start", "notstarted");
+        return new MermaidNode("start", "Start", "default");
     }
     static createFinishNode() {
-        return new MermaidNode("finish", "Finish", "notstarted");
+        return new MermaidNode("finish", "Finish", "default");
     }
 }
 exports.MermaidNode = MermaidNode;

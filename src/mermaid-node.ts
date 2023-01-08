@@ -1,6 +1,6 @@
 import { GitHubIssue } from "./models";
 
-export type MermaidNodeStatus = "notstarted" | "started" | "completed";
+export type MermaidNodeStatus = "default" | "notstarted" | "started" | "completed";
 
 export class MermaidNode {
     constructor(
@@ -53,10 +53,10 @@ export class MermaidNode {
     }
 
     public static createStartNode(): MermaidNode {
-        return new MermaidNode("start", "Start", "notstarted");
+        return new MermaidNode("start", "Start", "default");
     }
 
     public static createFinishNode(): MermaidNode {
-        return new MermaidNode("finish", "Finish", "notstarted");
+        return new MermaidNode("finish", "Finish", "default");
     }
 }

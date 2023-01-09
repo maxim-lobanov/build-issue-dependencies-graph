@@ -165,13 +165,13 @@ click issue1488484564 href "https://github.com/maxim-lobanov/build-issue-depende
 issue1488484695("[TEST ISSUE] Child issue 2"):::completed;
 click issue1488484695 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/3" _blank;
 
-issue1488484833("[TEST ISSUE] Child issue 3"):::completed;
+issue1488484833("[TEST ISSUE] Child issue 3"):::started;
 click issue1488484833 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/4" _blank;
 
 issue1524488391("[TEST ISSUE] Child issue 4"):::completed;
 click issue1524488391 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/5" _blank;
 
-issue1524488450("[TEST ISSUE] Child issue 5"):::completed;
+issue1524488450("[TEST ISSUE] Child issue 5"):::started;
 click issue1524488450 href "https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/6" _blank;
 
 issue1524488472("[TEST ISSUE] Child issue 6"):::notstarted;

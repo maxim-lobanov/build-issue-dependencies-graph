@@ -14,9 +14,17 @@ const run = async (): Promise<void> => {
         const mermaidRender = new MermaidRender(inputs.includeLegend);
 
         const rootIssue = await githubApiClient.getIssue(inputs.rootIssue);
-        const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
+        if (issueContentParser.isIssueClosed(rootIssue)) {
+            core.info("Skipping generation of mermaid diagram because issue is closed");
+            return;
+        }
 
+        const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
         core.info(`Found ${rootIssueTasklist.length} work items in task list.`);
+        if (rootIssueTasklist.length === 0) {
+            core.info("Skipping generation of mermaid diagram because there is no issues in tasklist");
+            return;
+        }
 
         core.info("Building dependency graph...");
         const graphBuilder = new GraphBuilder(inputs.includeFinishNode);

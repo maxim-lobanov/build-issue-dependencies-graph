@@ -61,12 +61,9 @@ ${renderedGraphIssues}
     }
 
     private renderIssue(issue: MermaidNode): string {
-        let result = `${issue.nodeId}("${issue.getWrappedTitle()}"):::${issue.status};`;
-        if (issue.url) {
-            result += `\nclick ${issue.nodeId} href "${issue.url}" _blank;`;
-        }
-
-        return result;
+        const title = issue.getWrappedTitle();
+        const linkedTitle = issue.url ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>` : title;
+        return `${issue.nodeId}("${linkedTitle}"):::${issue.status};`;
     }
 
     private renderDependencies(dependencies: GraphEdge[]): string {

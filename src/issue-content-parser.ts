@@ -7,6 +7,7 @@ export class IssueContentParser {
 
         return contentLines
             .filter(x => this.isTaskListLine(x))
+            .map(x => x.substring(6))
             .map(x => parseIssueUrl(x))
             .filter((x): x is GitHubIssueReference => x !== null);
     }
@@ -39,6 +40,10 @@ export class IssueContentParser {
             "",
             ...contentLines.slice(sectionEndIndex !== -1 ? sectionEndIndex : contentLines.length),
         ].join("\n");
+    }
+
+    public isIssueClosed(issue: GitHubIssue): boolean {
+        return issue.state === "closed";
     }
 
     public isIssueContentIdentical(issue: GitHubIssue, newIssueContent: string) {

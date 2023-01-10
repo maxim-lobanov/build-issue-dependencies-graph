@@ -169,6 +169,7 @@ class IssueContentParser {
         const contentLines = issue.body?.split("\n") ?? [];
         return contentLines
             .filter(x => this.isTaskListLine(x))
+            .map(x => x.substring(6))
             .map(x => (0, utils_1.parseIssueUrl)(x))
             .filter((x) => x !== null);
     }
@@ -193,6 +194,9 @@ class IssueContentParser {
             "",
             ...contentLines.slice(sectionEndIndex !== -1 ? sectionEndIndex : contentLines.length),
         ].join("\n");
+    }
+    isIssueClosed(issue) {
+        return issue.state === "closed";
     }
     isIssueContentIdentical(issue, newIssueContent) {
         // GitHub automatically replace "\n" to "\r\n" line endings when issue body is modified through GitHub UI.
@@ -272,8 +276,16 @@ const run = async () => {
         const issueContentParser = new issue_content_parser_1.IssueContentParser();
         const mermaidRender = new mermaid_render_1.MermaidRender(inputs.includeLegend);
         const rootIssue = await githubApiClient.getIssue(inputs.rootIssue);
+        if (issueContentParser.isIssueClosed(rootIssue)) {
+            core.info("Skipping generation of mermaid diagram because issue is closed");
+            return;
+        }
         const rootIssueTasklist = issueContentParser.extractIssueTasklist(rootIssue);
         core.info(`Found ${rootIssueTasklist.length} work items in task list.`);
+        if (rootIssueTasklist.length === 0) {
+            core.info("Skipping generation of mermaid diagram because there is no issues in tasklist");
+            return;
+        }
         core.info("Building dependency graph...");
         const graphBuilder = new graph_builder_1.GraphBuilder(inputs.includeFinishNode);
         for (const issueRef of rootIssueTasklist) {
@@ -435,11 +447,9 @@ ${renderedGraphIssues}
 `;
     }
     renderIssue(issue) {
-        let result = `${issue.nodeId}("${issue.getWrappedTitle()}"):::${issue.status};`;
-        if (issue.url) {
-            result += `\nclick ${issue.nodeId} href "${issue.url}" _blank;`;
-        }
-        return result;
+        const title = issue.getWrappedTitle();
+        const linkedTitle = issue.url ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>` : title;
+        return `${issue.nodeId}("${linkedTitle}"):::${issue.status};`;
     }
     renderDependencies(dependencies) {
         const renderedDependencies = dependencies.map(x => this.renderDependency(x)).join("\n");
@@ -467,10 +477,10 @@ exports.MermaidRender = MermaidRender;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseIssuesUrls = exports.parseIssueUrl = void 0;
-const issueUrlRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/i;
-const issueUrlsRegex = new RegExp(issueUrlRegex, "ig");
+const issueUrlRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)$/i;
+const issueUrlsRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/gi;
 const parseIssueUrl = (str) => {
-    const found = str.match(issueUrlRegex);
+    const found = str.trim().match(issueUrlRegex);
     if (!found) {
         return null;
     }

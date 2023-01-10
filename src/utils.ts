@@ -3,11 +3,11 @@ import { GitHubIssueReference } from "./models";
 // Analogue of TypeScript "Partial" type but for null values
 export type NullablePartial<T> = { [P in keyof T]: T[P] | null | undefined };
 
-const issueUrlRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/i;
-const issueUrlsRegex = new RegExp(issueUrlRegex, "ig");
+const issueUrlRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)$/i;
+const issueUrlsRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/gi;
 
 export const parseIssueUrl = (str: string): GitHubIssueReference | null => {
-    const found = str.match(issueUrlRegex);
+    const found = str.trim().match(issueUrlRegex);
     if (!found) {
         return null;
     }

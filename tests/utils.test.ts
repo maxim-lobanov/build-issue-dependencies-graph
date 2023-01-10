@@ -31,15 +31,8 @@ describe("parseIssueUrl", () => {
         expect(actual).toStrictEqual({ repoOwner: "actions", repoName: "setup-node", issueNumber: 5663 });
     });
 
-    it("parses correct issue url with task list marker", () => {
-        const actual = parseIssueUrl("- [ ] https://github.com/actions/setup-node/issues/5663");
-        expect(actual).toStrictEqual({ repoOwner: "actions", repoName: "setup-node", issueNumber: 5663 });
-    });
-
-    it("parses correct issue url if more than one issue in input line", () => {
-        const actual = parseIssueUrl(
-            "- [ ] https://github.com/actions/setup-node/issues/5663, https://github.com/actions/setup-node/issues/5665"
-        );
+    it("parses correct issue url with trailing spaces", () => {
+        const actual = parseIssueUrl(" https://github.com/actions/setup-node/issues/5663");
         expect(actual).toStrictEqual({ repoOwner: "actions", repoName: "setup-node", issueNumber: 5663 });
     });
 

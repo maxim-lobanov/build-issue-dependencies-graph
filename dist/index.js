@@ -448,7 +448,9 @@ ${renderedGraphIssues}
     }
     renderIssue(issue) {
         const title = issue.getWrappedTitle();
-        const linkedTitle = issue.url ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>` : title;
+        const linkedTitle = issue.url
+            ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>`
+            : title;
         return `${issue.nodeId}("${linkedTitle}"):::${issue.status};`;
     }
     renderDependencies(dependencies) {

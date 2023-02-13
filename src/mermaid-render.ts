@@ -61,7 +61,7 @@ ${renderedGraphIssues}
     }
 
     private renderIssue(issue: MermaidNode): string {
-        const title = issue.getWrappedTitle();
+        const title = issue.getFormattedTitle();
         const linkedTitle = issue.url
             ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>`
             : title;

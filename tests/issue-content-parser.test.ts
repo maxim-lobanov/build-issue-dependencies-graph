@@ -1,5 +1,5 @@
 import { IssueContentParser } from "../src/issue-content-parser";
-import { GitHubIssue } from "../src/models";
+import { GitHubIssue, GitHubRepoReference } from "../src/models";
 
 describe("IssueContentParser", () => {
     const issueContentParser = new IssueContentParser();
@@ -83,9 +83,11 @@ Test content 2
     });
 
     describe("extractIssueDependencies", () => {
+        const repoRef: GitHubRepoReference = { repoOwner: "testOwner", repoName: "testRepo" };
+
         it("empty body", () => {
             const issue = { body: undefined } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([]);
         });
 
@@ -101,7 +103,7 @@ https://github.com/actions/setup-node/issues/4
 Test content 3
 `,
             } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([]);
         });
 
@@ -109,7 +111,7 @@ Test content 3
             const issue = {
                 body: "## Hello\nDepends on https://github.com/actions/setup-node/issues/5663\nTest",
             } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([{ repoOwner: "actions", repoName: "setup-node", issueNumber: 5663 }]);
         });
 
@@ -123,7 +125,7 @@ Depends on https://github.com/actions/setup-node/issues/105, https://github.com/
 Test content
 `,
             } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 105 },
                 { repoOwner: "actions", repoName: "setup-python", issueNumber: 115 },
@@ -143,7 +145,7 @@ Depends on https://github.com/actions/setup-ruby/issues/105 & https://github.com
 Test content
 `,
             } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 101 },
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 102 },
@@ -166,11 +168,36 @@ Dependencies: https://github.com/actions/setup-node/issues/103
 Test content
 `,
             } as GitHubIssue;
-            const actual = issueContentParser.extractIssueDependencies(issue);
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
             expect(actual).toEqual([
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 101 },
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 102 },
                 { repoOwner: "actions", repoName: "setup-node", issueNumber: 103 },
+            ]);
+        });
+
+        it("diffent types of issues referencing", () => {
+            const issue = {
+                body: `
+Hello
+
+Depends on https://github.com/actions/setup-node/issues/101
+depends on: https://github.com/actions/setup-node/issues/102
+Dependencies: https://github.com/actions/setup-node/issues/103
+Depends on: #123, #456, https://github.com/actions/setup-node/issues/105, #701
+
+Test content
+`,
+            } as GitHubIssue;
+            const actual = issueContentParser.extractIssueDependencies(issue, repoRef);
+            expect(actual).toEqual([
+                { repoOwner: "actions", repoName: "setup-node", issueNumber: 101 },
+                { repoOwner: "actions", repoName: "setup-node", issueNumber: 102 },
+                { repoOwner: "actions", repoName: "setup-node", issueNumber: 103 },
+                { repoOwner: "testOwner", repoName: "testRepo", issueNumber: 123 },
+                { repoOwner: "testOwner", repoName: "testRepo", issueNumber: 456 },
+                { repoOwner: "actions", repoName: "setup-node", issueNumber: 105 },
+                { repoOwner: "testOwner", repoName: "testRepo", issueNumber: 701 },
             ]);
         });
     });

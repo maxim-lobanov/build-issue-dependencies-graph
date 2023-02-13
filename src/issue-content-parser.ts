@@ -1,4 +1,4 @@
-import { GitHubIssue, GitHubIssueReference } from "./models";
+import { GitHubIssue, GitHubIssueReference, GitHubRepoReference } from "./models";
 import { parseIssuesUrls, parseIssueUrl } from "./utils";
 
 export class IssueContentParser {
@@ -12,12 +12,12 @@ export class IssueContentParser {
             .filter((x): x is GitHubIssueReference => x !== null);
     }
 
-    public extractIssueDependencies(issue: GitHubIssue): GitHubIssueReference[] {
+    public extractIssueDependencies(issue: GitHubIssue, repoRef: GitHubRepoReference): GitHubIssueReference[] {
         const contentLines = issue.body?.split("\n") ?? [];
 
         return contentLines
             .filter(x => this.isDependencyLine(x))
-            .map(x => parseIssuesUrls(x))
+            .map(x => parseIssuesUrls(x, repoRef))
             .flat()
             .filter((x): x is GitHubIssueReference => x !== null);
     }

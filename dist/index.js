@@ -173,11 +173,11 @@ class IssueContentParser {
             .map(x => (0, utils_1.parseIssueUrl)(x))
             .filter((x) => x !== null);
     }
-    extractIssueDependencies(issue) {
+    extractIssueDependencies(issue, repoRef) {
         const contentLines = issue.body?.split("\n") ?? [];
         return contentLines
             .filter(x => this.isDependencyLine(x))
-            .map(x => (0, utils_1.parseIssuesUrls)(x))
+            .map(x => (0, utils_1.parseIssuesUrls)(x, repoRef))
             .flat()
             .filter((x) => x !== null);
     }
@@ -291,7 +291,7 @@ const run = async () => {
         for (const issueRef of rootIssueTasklist) {
             const issue = await githubApiClient.getIssue(issueRef);
             const issueDetails = mermaid_node_1.MermaidNode.createFromGitHubIssue(issue);
-            const issueDependencies = issueContentParser.extractIssueDependencies(issue);
+            const issueDependencies = issueContentParser.extractIssueDependencies(issue, issueRef);
             graphBuilder.addIssue(issueRef, issueDetails);
             issueDependencies.forEach(x => graphBuilder.addDependency(x, issueRef));
         }
@@ -330,12 +330,13 @@ run();
 /***/ }),
 
 /***/ 235:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MermaidNode = void 0;
+const utils_1 = __nccwpck_require__(918);
 class MermaidNode {
     constructor(nodeId, title, status, url) {
         this.nodeId = nodeId;
@@ -343,22 +344,10 @@ class MermaidNode {
         this.status = status;
         this.url = url;
     }
-    getWrappedTitle() {
-        const maxWidth = 40;
-        const words = this.title.split(/\s+/);
-        let result = words[0];
-        let lastLength = result.length;
-        for (let wordIndex = 1; wordIndex < words.length; wordIndex++) {
-            if (lastLength + words[wordIndex].length >= maxWidth) {
-                result += "\n";
-                lastLength = 0;
-            }
-            else {
-                result += " ";
-            }
-            result += words[wordIndex];
-            lastLength += words[wordIndex].length;
-        }
+    getFormattedTitle() {
+        let result = this.title;
+        result = result.replaceAll('"', "'");
+        result = (0, utils_1.wrapString)(result, 40);
         return result;
     }
     static createFromGitHubIssue(issue) {
@@ -447,7 +436,7 @@ ${renderedGraphIssues}
 `;
     }
     renderIssue(issue) {
-        const title = issue.getWrappedTitle();
+        const title = issue.getFormattedTitle();
         const linkedTitle = issue.url
             ? `<a href='${issue.url}' style='text-decoration:none;color: inherit;'>${title}</a>`
             : title;
@@ -478,9 +467,10 @@ exports.MermaidRender = MermaidRender;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseIssuesUrls = exports.parseIssueUrl = void 0;
+exports.wrapString = exports.parseIssuesUrls = exports.parseIssueNumber = exports.parseIssueUrl = void 0;
 const issueUrlRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)$/i;
-const issueUrlsRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/gi;
+const issueNumberRegex = /^#(\d+)$/;
+const issueUrlsRegex = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)|#\d+/gi;
 const parseIssueUrl = (str) => {
     const found = str.trim().match(issueUrlRegex);
     if (!found) {
@@ -493,18 +483,47 @@ const parseIssueUrl = (str) => {
     };
 };
 exports.parseIssueUrl = parseIssueUrl;
-const parseIssuesUrls = (str) => {
+const parseIssueNumber = (str, repoRef) => {
+    const found = str.trim().match(issueNumberRegex);
+    if (!found) {
+        return null;
+    }
+    return {
+        repoOwner: repoRef.repoOwner,
+        repoName: repoRef.repoName,
+        issueNumber: parseInt(found[1]),
+    };
+};
+exports.parseIssueNumber = parseIssueNumber;
+const parseIssuesUrls = (str, repoRef) => {
     const result = [];
     for (const match of str.matchAll(issueUrlsRegex)) {
-        result.push({
-            repoOwner: match[1],
-            repoName: match[2],
-            issueNumber: parseInt(match[3]),
-        });
+        const parsedIssue = (0, exports.parseIssueUrl)(match[0]) || (0, exports.parseIssueNumber)(match[0], repoRef);
+        if (parsedIssue) {
+            result.push(parsedIssue);
+        }
     }
     return result;
 };
 exports.parseIssuesUrls = parseIssuesUrls;
+const wrapString = (str, maxWidth) => {
+    const words = str.split(/\s+/);
+    let result = words[0];
+    let lastLength = result.length;
+    for (let wordIndex = 1; wordIndex < words.length; wordIndex++) {
+        if (lastLength + words[wordIndex].length >= maxWidth) {
+            result += "\n";
+            lastLength = 0;
+        }
+        else {
+            result += " ";
+        }
+        result += words[wordIndex];
+        lastLength += words[wordIndex].length;
+    }
+    return result;
+};
+exports.wrapString = wrapString;
 
 
 /***/ }),

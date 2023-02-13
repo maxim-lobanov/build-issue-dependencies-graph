@@ -1,4 +1,5 @@
 import { GitHubIssue } from "./models";
+import { wrapString } from "./utils";
 
 export type MermaidNodeStatus = "default" | "notstarted" | "started" | "completed";
 
@@ -10,23 +11,11 @@ export class MermaidNode {
         public readonly url?: string
     ) {}
 
-    public getWrappedTitle(): string {
-        const maxWidth = 40;
-        const words = this.title.split(/\s+/);
+    public getFormattedTitle(): string {
+        let result = this.title;
 
-        let result = words[0];
-        let lastLength = result.length;
-        for (let wordIndex = 1; wordIndex < words.length; wordIndex++) {
-            if (lastLength + words[wordIndex].length >= maxWidth) {
-                result += "\n";
-                lastLength = 0;
-            } else {
-                result += " ";
-            }
-
-            result += words[wordIndex];
-            lastLength += words[wordIndex].length;
-        }
+        result = result.replaceAll('"', "'");
+        result = wrapString(result, 40);
 
         return result;
     }

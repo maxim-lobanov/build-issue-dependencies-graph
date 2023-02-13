@@ -55,29 +55,18 @@ describe("MermaidNode", () => {
         });
     });
 
-    describe("getWrappedTitle", () => {
+    describe("getFormattedTitle", () => {
         it.each([
             ["", ""],
             ["hello world", "hello world"],
             [
-                "Integrate software report diff module into macOS Monterey pipeline and validate deployment pipeline end-to-end",
-                "Integrate software report diff module into\nmacOS Monterey pipeline and validate\ndeployment pipeline end-to-end",
-            ],
-            [
                 "Onboard Linux image generation to new software report module",
                 "Onboard Linux image generation to new\nsoftware report module",
             ],
-            [
-                "Integrate auxiliary release scripts into Windows / Linux deployment pipelines",
-                "Integrate auxiliary release scripts into\nWindows / Linux deployment pipelines",
-            ],
-            [
-                "Implement unit tests and e2e tests for software report diff module",
-                "Implement unit tests and e2e tests for\nsoftware report diff module",
-            ],
+            ['Update link "Learn more" with new link', "Update link 'Learn more' with new link"],
         ])("case %#", (input: string, expected: string) => {
             const node = new MermaidNode("issue", input, "notstarted");
-            const actual = node.getWrappedTitle();
+            const actual = node.getFormattedTitle();
             expect(actual).toBe(expected);
         });
     });

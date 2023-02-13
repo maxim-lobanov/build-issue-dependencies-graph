@@ -1,6 +1,9 @@
-export type GitHubIssueReference = {
+export type GitHubRepoReference = {
     repoOwner: string;
     repoName: string;
+};
+
+export type GitHubIssueReference = GitHubRepoReference & {
     issueNumber: number;
 };
 

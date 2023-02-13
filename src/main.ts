@@ -31,7 +31,7 @@ const run = async (): Promise<void> => {
         for (const issueRef of rootIssueTasklist) {
             const issue = await githubApiClient.getIssue(issueRef);
             const issueDetails = MermaidNode.createFromGitHubIssue(issue);
-            const issueDependencies = issueContentParser.extractIssueDependencies(issue);
+            const issueDependencies = issueContentParser.extractIssueDependencies(issue, issueRef);
             graphBuilder.addIssue(issueRef, issueDetails);
             issueDependencies.forEach(x => graphBuilder.addDependency(x, issueRef));
         }

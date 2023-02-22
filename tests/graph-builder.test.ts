@@ -197,4 +197,29 @@ describe("GraphBuilder", () => {
             { from: "issue3", to: "finish" },
         ]);
     });
+
+    it("Add dependency before adding node", () => {
+        const graphBuilder = new GraphBuilder(true);
+
+        graphBuilder.addIssue(
+            { repoOwner: "A", repoName: "B", issueNumber: 1 },
+            new MermaidNode("issue1", "Test issue 1", "notstarted")
+        );
+        graphBuilder.addDependency(
+            { repoOwner: "A", repoName: "B", issueNumber: 1 },
+            { repoOwner: "A", repoName: "B", issueNumber: 2 }
+        );
+        graphBuilder.addIssue(
+            { repoOwner: "A", repoName: "B", issueNumber: 2 },
+            new MermaidNode("issue2", "Test issue 2", "started")
+        );
+
+        const actual = extractNodeIdFromGraph(graphBuilder.getGraph());
+        expect(actual.vertices).toEqual(["start", "issue1", "issue2", "finish"]);
+        expect(actual.edges).toEqual([
+            { from: "start", to: "issue1" },
+            { from: "issue1", to: "issue2" },
+            { from: "issue2", to: "finish" },
+        ]);
+    });
 });

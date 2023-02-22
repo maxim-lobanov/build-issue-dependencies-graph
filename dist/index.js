@@ -110,6 +110,9 @@ class GraphBuilder {
             graphNode = { value: issue, predecessors: [], successors: [] };
             this.nodes.set(nodeKey, graphNode);
         }
+        else if (issue) {
+            graphNode.value = issue;
+        }
         return graphNode;
     }
     addIssue(issueReference, issue) {

@@ -1,0 +1,95 @@
+#!/bin/bash
+
+set -e
+
+help()
+{
+   # Display Help
+   echo "Syntax: script/start [-i|-s|-t|-p]"
+   echo "options:"
+   echo "-i|--issue         Root issue url."
+   echo "-s|--section       Section name to update."
+   echo "-t|--token         GitHub token."
+   echo "-p|--publish       Update root issue with new mermaid chart."
+   echo
+   echo "Examples:"
+   echo "script/start -issue 'https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/1' --token 'fake' --section 'Spec'"
+   echo "script/start -issue 'https://github.com/maxim-lobanov/build-issue-dependencies-graph/issues/1' --token 'fake' --section 'Spec' --publish"
+   echo
+}
+
+
+ROOT_ISSUE=""
+SECTION=""
+TOKEN=""
+INCLUDE_LEGEND="true"
+INCLUDE_FINISH_NODE="true"
+DRY_RUN="true"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -i|--issue)
+      ROOT_ISSUE="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -s|--section)
+      SECTION="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -t|--token)
+      TOKEN="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -p|--publish)
+      DRY_RUN="false"
+      shift # past argument
+      ;;
+    -h|--help)
+        help
+        exit 0
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$ROOT_ISSUE" ]; then
+    echo 'Error: Mandatory argument "--issue" is missed'
+    echo
+    help
+    exit 1
+fi
+
+if [ -z "$TOKEN" ]; then
+    echo 'Error: Mandatory argument "--token" is missed'
+    echo
+    help
+    exit 1
+fi
+
+if [ -z "$SECTION" ]; then
+    echo 'Error: Mandatory argument "--section" is missed'
+    echo
+    help
+    exit 1
+fi
+
+if ! command -v ts-node &> /dev/null
+then
+    echo "Installing ts-node..."
+    npm install -g ts-node
+fi
+
+env \
+"INPUT_ROOT-ISSUE-URL=$ROOT_ISSUE" \
+"INPUT_SECTION-TITLE=$SECTION" \
+"INPUT_GITHUB-TOKEN=$TOKEN" \
+"INPUT_INCLUDE-LEGEND=$INCLUDE_LEGEND" \
+"INPUT_INCLUDE-FINISH-NODE=$INCLUDE_FINISH_NODE" \
+"INPUT_DRY-RUN=$DRY_RUN" \
+ts-node src/main.ts

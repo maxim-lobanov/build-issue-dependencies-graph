@@ -354,7 +354,7 @@ class MermaidNode {
         return result;
     }
     static createFromGitHubIssue(issue) {
-        return new MermaidNode(`issue${issue.id}`, issue.title, MermaidNode.getNodeStatusFromGitHubIssue(issue), issue.html_url);
+        return new MermaidNode(`issue${issue.id}`, issue.title, MermaidNode.getNodeStatusFromGitHubIssue(issue));
     }
     static getNodeStatusFromGitHubIssue(issue) {
         if (issue.state !== "open") {

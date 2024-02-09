@@ -25,7 +25,7 @@ export class MermaidNode {
             `issue${issue.id}`,
             issue.title,
             MermaidNode.getNodeStatusFromGitHubIssue(issue),
-            issue.html_url
+            //issue.html_url
         );
     }
 

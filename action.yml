@@ -27,5 +27,5 @@ outputs:
   mermaid-diagram:
     description: 'Rendered markdown with mermaid diagram'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
